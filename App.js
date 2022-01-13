@@ -8,8 +8,12 @@ export default function App() {
 
 
   const handleClick = async () => {
-    try{ToastModule.show('Awesome', ToastModule.LONG); } catch(e) { console.error(e); }}
-      
+    try{
+    ToastModule.show('Awesome', ToastModule.LONG); 
+    } catch(e) { 
+      console.error(e); 
+    }
+  }   
     
 
   return (
