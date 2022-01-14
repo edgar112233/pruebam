@@ -1,6 +1,7 @@
 import { Text, View , NativeModules } from "react-native";
 import { Button } from "react-native";
 import ToastModule from './ToastModule';
+import { APP_LIST } from './app-list';
 
 
 
@@ -41,18 +42,48 @@ export default function App() {
       console.error(e);
     }
   } 
+
+  const showAppsInstalled = async (idx, app, pkg) => {
+    var installed = await ToastModule.isPackageInstalled(pkg)
+    console.log(idx, app, ": ", installed)
+  }
   const handleClick1 = async () => {
     //ToastModule.muerte()
-    var esta = await ToastModule.isPackageInstalled('com.android.chrome');
-    console.log(esta)
-  } 
     
+   
+   /* let appCheckResultsPKG = [],
+    checkCounterPKG = 0;
+    Object.keys(APP_LIST);
+      .forEach((d, idx) => {
+          checkCounterPKG++;
+            AppInstalledChecker
+            .isAppInstalledAndroid(d)
+            then((isInstalled) => {
+              checkCounterPKG--;
+                      appCheckResultsPKG.push({name: d, isInstalled: isInstalled, idx: idx});
+                        if (checkCounterPKG === 0) {
+                            this.renderListPKG(appCheckResultsPKG);
+                        }
+                    });
+            });*/
+    Object.keys(APP_LIST).forEach((d,idx) => {
+      showAppsInstalled(idx, d, APP_LIST[d].pkgName)      
+    });
+    //var esta = await ToastModule.isPackageInstalled('com.google.android.youtube');
+  } 
+  
+  const getAplications = async () => {
+    //var installed = await ToastModule.isPackageInstalled(pkg)
+    var apps = await ToastModule.getApps()
+    console.log(apps)
+  }
 
   return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <Text>Home!</Text>
         <Button  title="prueba" onPress={handleClick}/>
         <Button  title="kill" onPress={handleClick1}/>
+        <Button  title="getApps" onPress={getAplications}/>
       </View>
     
   );
