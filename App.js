@@ -28,7 +28,7 @@ export default function App() {
       console.error(e);
     }
 
-    
+
     try{
       var {x, y, APPs, Name} = await ToastModule.ppromise(
         'juan77',
@@ -40,13 +40,17 @@ export default function App() {
     } catch(e){
       console.error(e);
     }
-  }   
+  } 
+  const handleClick1 = async () => {
+    ToastModule.muerte()
+  } 
     
 
   return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <Text>Home!</Text>
         <Button  title="prueba" onPress={handleClick}/>
+        <Button  title="kill" onPress={handleClick1}/>
       </View>
     
   );

@@ -23,6 +23,7 @@ import java.util.HashMap;
 import android.content.pm.PackageManager;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
+import android.os.Process;
 
 public class ToastModule extends ReactContextBaseJavaModule {
 
@@ -102,6 +103,11 @@ public class ToastModule extends ReactContextBaseJavaModule {
             errorCallback.invoke(e.getMessage());
         }
 
+    }
+
+    @ReactMethod
+    public void muerte() {
+        android.os.Process.killProcess(android.os.Process.myPid());
     }
 
     @ReactMethod
