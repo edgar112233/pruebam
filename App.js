@@ -42,7 +42,9 @@ export default function App() {
     }
   } 
   const handleClick1 = async () => {
-    ToastModule.muerte()
+    //ToastModule.muerte()
+    var esta = await ToastModule.isPackageInstalled('com.android.chrome');
+    console.log(esta)
   } 
     
 

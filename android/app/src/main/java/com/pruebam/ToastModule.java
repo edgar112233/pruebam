@@ -152,4 +152,14 @@ public class ToastModule extends ReactContextBaseJavaModule {
 
     }
 
+    @ReactMethod
+    public void isPackageInstalled(String packageName, Promise cb) {
+        try {
+            pm.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES);
+            cb.resolve(true);
+        } catch (Exception e) {
+            cb.resolve(false);
+        }
+    }
+
 }
