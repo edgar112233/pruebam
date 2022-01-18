@@ -177,8 +177,8 @@ public class ToastModule extends ReactContextBaseJavaModule {
                     //appInfo.putDouble("lastUpdateTime", (packageInfo.lastUpdateTime));
                     appInfo.putString("appName", ((String) packageInfo.applicationInfo.loadLabel(pm)).trim());
 
-                    //Drawable icon = pm.getApplicationIcon(packageInfo.applicationInfo);
-                    //appInfo.putString("icon", Utility.convert(icon));
+                    Drawable icon = pm.getApplicationIcon(packageInfo.applicationInfo);
+                    appInfo.putString("icon", Utility.convert(icon));
 
                     //String apkDir = packageInfo.applicationInfo.publicSourceDir;
                     //appInfo.putString("apkDir", apkDir);
@@ -196,6 +196,27 @@ public class ToastModule extends ReactContextBaseJavaModule {
 
     }
 
+    /*@ReactMethod
+    public void killProcesso(String pkgName, Promise promise){
+        ActivityManager manager =  (ActivityManager) getApplicationContext.getSystemService(getApplicationContext.ACTIVITY_SERVICE);
+        List<RunningAppProcessInfo> activityes = ((ActivityManager)manager).getRunningAppProcesses();
+
+        for (int iCnt = 0; iCnt < activityes.size(); iCnt++){
+
+            System.out.println("APP: "+iCnt +" "+ activityes.get(iCnt).processName);
+
+            if (activityes.get(iCnt).processName.contains(pkgName)){
+                android.os.Process.sendSignal(activityes.get(iCnt).pid, android.os.Process.SIGNAL_KILL);
+                android.os.Process.killProcess(activityes.get(i).pid);
+                //manager.killBackgroundProcesses("com.android.email");
+
+                //manager.restartPackage("com.android.email");
+
+                System.out.println("Inside if");
+            }
+
+        }
+    }*/
 
     @ReactMethod
     public void isPackageInstalled(String packageName, Promise cb){

@@ -1,34 +1,40 @@
 import ToastModule from './ToastModule';
 import { APP_LIST } from './app-list';
 import React, {useState} from 'react';
-import { SafeAreaView, View, FlatList, StyleSheet, Text, StatusBar, Pressable, NativeModules } from 'react-native';
+import { SafeAreaView, View, FlatList, StyleSheet, Text, StatusBar, Pressable, NativeModules, Image } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'; //Download
 
-const Item = ({ title }) => {
+const Item = ({ title, icon, pkgName  }) => {
     const [islock, setLock] = useState(false);
 
     const onClickItem  = () => {
         //setLock(!islock);
         if(!islock){
             //Desactivar aplicación.
-            console.log(islock)
+            console.log(title)
+            console.log(pkgName)
         }
         setLock(!islock);
         //console.log(islock)
     }
     return (
       <Pressable style={styles.item} onPress={onClickItem}>
-            <Text style={styles.title}>{title}</Text>
-            {/*<MaterialCommunityIcons style={styles.icons} name="lock-open" size={26} />*/}
-            { islock ? (
-                <MaterialCommunityIcons style={styles.icons} name="lock" color="red"size={26} />
-                ) : (
-                <MaterialCommunityIcons style={styles.icons} name="lock-open" color="black" size={26} />
-            )}
+              <Image
+                style={styles.logo}
+                source={{
+                uri: 'data:image/png;base64,'.concat(icon)
+              }}
+              />
+              <View style={styles.view}>
+                <Text style={styles.title}>{title}</Text>
+                {/*<MaterialCommunityIcons style={styles.icons} name="lock-open" size={26} />*/}
+                { islock ? (
+                    <MaterialCommunityIcons style={styles.icons} name="lock" color="red"size={26} />
+                    ) : (
+                    <MaterialCommunityIcons style={styles.icons} name="lock-open" color="black" size={26} />
+                )}
+            </View>
       </Pressable>
-
-      /*<Text style={styles.title}>{title}</Text>
-      <MaterialCommunityIcons style={styles.icons} name="lock-open" size={26} />*/
     );
 };
 
@@ -81,7 +87,7 @@ class App2 extends React.Component {
 
       } else {
             const renderItem = ({ item }) => (
-                <Item title={item.appName} />
+                <Item title={item.appName} icon={item.icon} pkgName = {item.packageName} />
             )
             return (
                 <SafeAreaView style={styles.container}>
@@ -106,15 +112,26 @@ const styles = StyleSheet.create({
     item: {
       flexDirection: 'row',
       backgroundColor: '#FFFFFF',
-      padding: 20,
+      //padding: 5,
       marginVertical: 0,
       marginHorizontal: 0,
+      justifyContent: 'flex-start',
+      //alignItems: 'center',
     },
     title: {
-      fontSize: 20,
+      fontSize: 15
     },
     icons: {
         marginLeft: 0,
+    },
+    logo: {
+      width: 50,
+      height: 50,
+    },
+    view: {
+      padding: 5,
+      flexDirection: 'row',
+      justifyContent: 'center'
     }
 });
   
