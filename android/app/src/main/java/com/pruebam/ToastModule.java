@@ -169,25 +169,25 @@ public class ToastModule extends ReactContextBaseJavaModule {
             for (int i = 0; i < pList.size(); i++) {
                 PackageInfo packageInfo = pList.get(i);
                 WritableMap appInfo = Arguments.createMap();
+                if ((packageInfo.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0) {
+                    appInfo.putString("packageName", packageInfo.packageName);
+                    //appInfo.putString("versionName", packageInfo.versionName);
+                    //appInfo.putDouble("versionCode", packageInfo.versionCode);
+                    //appInfo.putDouble("firstInstallTime", (packageInfo.firstInstallTime));
+                    //appInfo.putDouble("lastUpdateTime", (packageInfo.lastUpdateTime));
+                    appInfo.putString("appName", ((String) packageInfo.applicationInfo.loadLabel(pm)).trim());
 
-                appInfo.putString("packageName", packageInfo.packageName);
-                appInfo.putString("versionName", packageInfo.versionName);
-                appInfo.putDouble("versionCode", packageInfo.versionCode);
-                appInfo.putDouble("firstInstallTime", (packageInfo.firstInstallTime));
-                appInfo.putDouble("lastUpdateTime", (packageInfo.lastUpdateTime));
-                appInfo.putString("appName", ((String) packageInfo.applicationInfo.loadLabel(pm)).trim());
+                    //Drawable icon = pm.getApplicationIcon(packageInfo.applicationInfo);
+                    //appInfo.putString("icon", Utility.convert(icon));
 
-                //Drawable icon = pm.getApplicationIcon(packageInfo.applicationInfo);
-                //appInfo.putString("icon", Utility.convert(icon));
+                    //String apkDir = packageInfo.applicationInfo.publicSourceDir;
+                    //appInfo.putString("apkDir", apkDir);
 
-                String apkDir = packageInfo.applicationInfo.publicSourceDir;
-                appInfo.putString("apkDir", apkDir);
-
-                File file = new File(apkDir);
-                double size = file.length();
-                appInfo.putDouble("size", size);
-
-                list.pushMap(appInfo);
+                    //File file = new File(apkDir);
+                    //double size = file.length();
+                    //appInfo.putDouble("size", size);
+                    list.pushMap(appInfo);
+                }
             }
             promise.resolve(list);
         } catch (Exception ex) {
@@ -195,6 +195,7 @@ public class ToastModule extends ReactContextBaseJavaModule {
         }
 
     }
+
 
     @ReactMethod
     public void isPackageInstalled(String packageName, Promise cb){
