@@ -45,7 +45,7 @@ public class ToastModule extends ReactContextBaseJavaModule {
     public ToastModule(ReactApplicationContext reactContext) {
         super(reactContext);
         pm = reactContext.getPackageManager();
-        am = reactContext.getSystemService(Context.ACTIVITY_SERVICE);
+        am = (ActivityManager) reactContext.getSystemService(reactContext.ACTIVITY_SERVICE);
     }
 
     @Override
@@ -69,13 +69,15 @@ public class ToastModule extends ReactContextBaseJavaModule {
         try {
 
             List<ActivityManager.RunningAppProcessInfo> pidsTask = am.getRunningAppProcesses();
+            if (pidsTask == null) {
+                promise.resolve(false);
+            }
             for (int i = 0; i < pidsTask.size(); i++) {
                 if (pidsTask.get(i).processName.equals(packageName)) {
                     puid = pidsTask.get(i).uid;
-                    promise.resolve(1);
+                    promise.resolve(puid);
                 }
             }
-            promise.resolve(2);
 
         } catch (Error e) {
             promise.reject(e);
