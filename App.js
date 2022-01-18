@@ -77,6 +77,17 @@ export default function App() {
     var apps = await ToastModule.getApps()
     console.log(apps)
   }
+  const alirun = async () => {
+    console.log("alirun is")
+    try{
+      console.log("entro al alirun")
+      var run = await ToastModule.muerte()
+      console.log(run)
+    }catch(e){
+      console.log("hizo catch")
+      console.log(e)
+  }
+  }
 
   return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -84,6 +95,7 @@ export default function App() {
         <Button  title="prueba" onPress={handleClick}/>
         <Button  title="kill" onPress={handleClick1}/>
         <Button  title="getApps" onPress={getAplications}/>
+        <Button  title="aliisrun" onPress={alirun}/>
       </View>
     
   );

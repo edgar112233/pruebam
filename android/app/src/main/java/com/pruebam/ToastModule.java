@@ -15,7 +15,6 @@ import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.Arguments;
 
-
 import android.graphics.drawable.Drawable;
 
 import java.io.File;
@@ -33,6 +32,7 @@ import android.os.Process;
 import android.content.pm.PackageInfo;
 
 import com.pruebam.Utility;
+import android.app.ActivityManager;
 
 public class ToastModule extends ReactContextBaseJavaModule {
 
@@ -40,10 +40,12 @@ public class ToastModule extends ReactContextBaseJavaModule {
     private static final String DURATION_LONG_KEY = "LONG";
     private static final String E_LAYOUT_ERROR = "E_LAYOUT_ERROR";
     PackageManager pm;
+    ActivityManager am;
 
     public ToastModule(ReactApplicationContext reactContext) {
         super(reactContext);
         pm = reactContext.getPackageManager();
+        am = reactContext.getSystemService(Context.ACTIVITY_SERVICE);
     }
 
     @Override
@@ -57,6 +59,28 @@ public class ToastModule extends ReactContextBaseJavaModule {
         constants.put(DURATION_SHORT_KEY, Toast.LENGTH_SHORT);
         constants.put(DURATION_LONG_KEY, Toast.LENGTH_LONG);
         return constants;
+    }
+
+    @ReactMethod
+    public void muerte(Promise promise) {
+        // android.os.Process.killProcess("com.alibaba.aliexpresshd");
+        int puid;
+        String packageName = "com.alibaba.aliexpresshd";
+        try {
+
+            List<ActivityManager.RunningAppProcessInfo> pidsTask = am.getRunningAppProcesses();
+            for (int i = 0; i < pidsTask.size(); i++) {
+                if (pidsTask.get(i).processName.equals(packageName)) {
+                    puid = pidsTask.get(i).uid;
+                    promise.resolve(1);
+                }
+            }
+            promise.resolve(2);
+
+        } catch (Error e) {
+            promise.reject(e);
+        }
+        // android.os.Process.killProcess(piud);
     }
 
     @ReactMethod
@@ -115,11 +139,6 @@ public class ToastModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void muerte() {
-        android.os.Process.killProcess(android.os.Process.myPid());
-    }
-
-    @ReactMethod
     public void ppromise(
             String name,
             String location,
@@ -171,63 +190,68 @@ public class ToastModule extends ReactContextBaseJavaModule {
                 WritableMap appInfo = Arguments.createMap();
                 if ((packageInfo.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0) {
                     appInfo.putString("packageName", packageInfo.packageName);
-                    //appInfo.putString("versionName", packageInfo.versionName);
-                    //appInfo.putDouble("versionCode", packageInfo.versionCode);
-                    //appInfo.putDouble("firstInstallTime", (packageInfo.firstInstallTime));
-                    //appInfo.putDouble("lastUpdateTime", (packageInfo.lastUpdateTime));
+                    // appInfo.putString("versionName", packageInfo.versionName);
+                    // appInfo.putDouble("versionCode", packageInfo.versionCode);
+                    // appInfo.putDouble("firstInstallTime", (packageInfo.firstInstallTime));
+                    // appInfo.putDouble("lastUpdateTime", (packageInfo.lastUpdateTime));
                     appInfo.putString("appName", ((String) packageInfo.applicationInfo.loadLabel(pm)).trim());
 
                     Drawable icon = pm.getApplicationIcon(packageInfo.applicationInfo);
                     appInfo.putString("icon", Utility.convert(icon));
 
-                    //String apkDir = packageInfo.applicationInfo.publicSourceDir;
-                    //appInfo.putString("apkDir", apkDir);
+                    // String apkDir = packageInfo.applicationInfo.publicSourceDir;
+                    // appInfo.putString("apkDir", apkDir);
 
-                    //File file = new File(apkDir);
-                    //double size = file.length();
-                    //appInfo.putDouble("size", size);
+                    // File file = new File(apkDir);
+                    // double size = file.length();
+                    // appInfo.putDouble("size", size);
                     list.pushMap(appInfo);
                 }
             }
             promise.resolve(list);
         } catch (Exception ex) {
-        promise.reject(ex);
+            promise.reject(ex);
         }
 
     }
 
-    /*@ReactMethod
-    public void killProcesso(String pkgName, Promise promise){
-        ActivityManager manager =  (ActivityManager) getApplicationContext.getSystemService(getApplicationContext.ACTIVITY_SERVICE);
-        List<RunningAppProcessInfo> activityes = ((ActivityManager)manager).getRunningAppProcesses();
-
-        for (int iCnt = 0; iCnt < activityes.size(); iCnt++){
-
-            System.out.println("APP: "+iCnt +" "+ activityes.get(iCnt).processName);
-
-            if (activityes.get(iCnt).processName.contains(pkgName)){
-                android.os.Process.sendSignal(activityes.get(iCnt).pid, android.os.Process.SIGNAL_KILL);
-                android.os.Process.killProcess(activityes.get(i).pid);
-                //manager.killBackgroundProcesses("com.android.email");
-
-                //manager.restartPackage("com.android.email");
-
-                System.out.println("Inside if");
-            }
-
-        }
-    }*/
+    /*
+     * @ReactMethod
+     * public void killProcesso(String pkgName, Promise promise){
+     * ActivityManager manager = (ActivityManager)
+     * getApplicationContext.getSystemService(getApplicationContext.ACTIVITY_SERVICE
+     * );
+     * List<RunningAppProcessInfo> activityes =
+     * ((ActivityManager)manager).getRunningAppProcesses();
+     * 
+     * for (int iCnt = 0; iCnt < activityes.size(); iCnt++){
+     * 
+     * System.out.println("APP: "+iCnt +" "+ activityes.get(iCnt).processName);
+     * 
+     * if (activityes.get(iCnt).processName.contains(pkgName)){
+     * android.os.Process.sendSignal(activityes.get(iCnt).pid,
+     * android.os.Process.SIGNAL_KILL);
+     * android.os.Process.killProcess(activityes.get(i).pid);
+     * //manager.killBackgroundProcesses("com.android.email");
+     * 
+     * //manager.restartPackage("com.android.email");
+     * 
+     * System.out.println("Inside if");
+     * }
+     * 
+     * }
+     * }
+     */
 
     @ReactMethod
-    public void isPackageInstalled(String packageName, Promise cb){
+    public void isPackageInstalled(String packageName, Promise cb) {
         try {
             pm.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES);
             cb.resolve(true);
         } catch (Exception e) {
             cb.resolve(false);
         }
-        
-    }
 
+    }
 
 }
