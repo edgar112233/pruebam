@@ -2,11 +2,13 @@ import { Text, View , NativeModules } from "react-native";
 import { Button } from "react-native";
 import ToastModule from './ToastModule';
 import { APP_LIST } from './app-list';
+ 
 
 
 
 export default function App() {
-
+  
+  
 
   const handleClick = async () => {
     try{
@@ -81,7 +83,7 @@ export default function App() {
     console.log("alirun is")
     try{
       console.log("entro al alirun")
-      var run = await ToastModule.muerte()
+      var run = await ToastModule.killbypackage("com.pruebam")
       console.log(run)
     }catch(e){
       console.log("hizo catch")

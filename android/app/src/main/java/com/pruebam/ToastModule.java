@@ -63,26 +63,38 @@ public class ToastModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void muerte(Promise promise) {
-        // android.os.Process.killProcess("com.alibaba.aliexpresshd");
         int puid;
-        String packageName = "com.alibaba.aliexpresshd";
+        String packageName = "com.spotify.music";
         try {
 
-            List<ActivityManager.RunningAppProcessInfo> pidsTask = am.getRunningAppProcesses();
-            if (pidsTask == null) {
-                promise.resolve(false);
+            List<ActivityManager.RunningAppProcessInfo> activityes = am.getRunningAppProcesses();
+            WritableArray list = Arguments.createArray();
+            for (int iCnt = 0; iCnt < activityes.size(); iCnt++) {
+                WritableMap appInfo = Arguments.createMap();
+                // Log.d("APP: ", iCnt +" "+ activityes.get(iCnt).processName);
+                appInfo.putString("name", activityes.get(iCnt).processName);
+                appInfo.putInt("pid", activityes.get(iCnt).pid);
+                /*
+                 * if (activityes.get(iCnt).processName.contains(packageName)){
+                 * android.os.Process.sendSignal(activityes.get(iCnt).pid,
+                 * android.os.Process.SIGNAL_KILL);
+                 * android.os.Process.killProcess(activityes.get(iCnt).pid);
+                 * //manager.killBackgroundProcesses("com.android.email");
+                 * 
+                 * //manager.restartPackage("com.android.email");
+                 * promise.resolve(1);
+                 * //System.out.println("Inside if");
+                 * }
+                 */
+                list.pushMap(appInfo);
+
             }
-            for (int i = 0; i < pidsTask.size(); i++) {
-                if (pidsTask.get(i).processName.equals(packageName)) {
-                    puid = pidsTask.get(i).uid;
-                    promise.resolve(puid);
-                }
-            }
+            promise.resolve(list);
 
         } catch (Error e) {
             promise.reject(e);
         }
-        // android.os.Process.killProcess(piud);
+        // killBackgroundProcesses (String packageName)
     }
 
     @ReactMethod
@@ -249,6 +261,17 @@ public class ToastModule extends ReactContextBaseJavaModule {
     public void isPackageInstalled(String packageName, Promise cb) {
         try {
             pm.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES);
+            cb.resolve(true);
+        } catch (Exception e) {
+            cb.resolve(false);
+        }
+
+    }
+
+    @ReactMethod
+    public void killbypackage(String packageName, Promise cb) {
+        try {
+            am.killBackgroundProcesses(packageName);
             cb.resolve(true);
         } catch (Exception e) {
             cb.resolve(false);
