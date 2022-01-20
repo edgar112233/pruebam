@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
+import androidx.annotation.RequiresApi;
 import android.content.pm.PackageManager;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
@@ -34,18 +35,62 @@ import android.content.pm.PackageInfo;
 import com.pruebam.Utility;
 import android.app.ActivityManager;
 
+import android.content.SharedPreferences;
+import android.app.usage.UsageStats;
+import android.app.usage.UsageStatsManager;
+import android.app.Service;
+import android.provider.Settings;
+import android.util.Log;
+import android.os.Build;
+import android.net.Uri;
+
 public class ToastModule extends ReactContextBaseJavaModule {
+
+    SharedPreferences sharedpreferences;
+    SharedPreferences.Editor editor;
+    boolean mLock=false;
+    List<String> lockedApp=new ArrayList<String>();
+    Map<String, UsageStats> map;
+    UsageStatsManager mUsageStatsManager;
 
     private static final String DURATION_SHORT_KEY = "SHORT";
     private static final String DURATION_LONG_KEY = "LONG";
     private static final String E_LAYOUT_ERROR = "E_LAYOUT_ERROR";
     PackageManager pm;
     ActivityManager am;
+    ReactApplicationContext reactContext;
+
+    static List<TheApp> theApp=new ArrayList<>();  
 
     public ToastModule(ReactApplicationContext reactContext) {
         super(reactContext);
+        this.reactContext = reactContext;
         pm = reactContext.getPackageManager();
-        am = reactContext.getSystemService(Context.ACTIVITY_SERVICE);
+        am = (ActivityManager) reactContext.getSystemService(reactContext.ACTIVITY_SERVICE);
+
+        sharedpreferences = (SharedPreferences) reactContext.getSharedPreferences("Locked apps list", reactContext.MODE_PRIVATE);
+        editor = sharedpreferences.edit();
+
+        //reactContext.stopService(new Intent(reactContext.getApplicationContext(), CurrentActivityService.class));//stop any earlier services
+        mUsageStatsManager = (UsageStatsManager) reactContext.getSystemService(Service.USAGE_STATS_SERVICE);
+
+        mLock=sharedpreferences.getBoolean("master lock state",true);
+        
+        List<PackageInfo> pList = pm.getInstalledPackages(0);
+        TheApp aApp=new TheApp();
+
+        for (int i = 0; i < pList.size(); i++) {
+            PackageInfo packageInfo = pList.get(i);
+            if ((packageInfo.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0) {
+                aApp=new TheApp();
+                aApp.setPackageName(packageInfo.packageName);
+                aApp.setName(((String) packageInfo.applicationInfo.loadLabel(pm)).trim());
+                theApp.add(aApp);
+            }
+        }
+
+        requestUsageStatsPermission();
+
     }
 
     @Override
@@ -53,6 +98,82 @@ public class ToastModule extends ReactContextBaseJavaModule {
         return "ToastModule";
     }
 
+    void requestUsageStatsPermission(){
+        Intent sharingIntent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
+        sharingIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK |Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        reactContext.startActivity(sharingIntent);
+    }
+    @ReactMethod 
+    public void BlockApplication(String pkgName, Promise promise){
+        Log.e("Block app", "");
+        int n = 0;
+        for(TheApp app: theApp){
+            if(app.getPackageName().equals(pkgName)){
+                app.setLocked(true);
+                n = 1;
+            }
+        }
+        if(n == 1){
+            promise.resolve(1);
+        }
+        else{
+            promise.resolve(0);
+        }
+    }
+
+    @ReactMethod 
+    public void showBlockApplications(Promise promise){
+        WritableArray list = Arguments.createArray();
+        for(TheApp app: theApp){
+            if(app.isLocked()==true){
+                WritableMap appInfo = Arguments.createMap();
+                appInfo.putString("AppName", app.getName());
+                list.pushMap(appInfo);
+
+            }
+        }
+        promise.resolve(list);
+    }
+
+    @ReactMethod 
+    public void DesBlockApplication(String pkgName){
+        WritableArray list = Arguments.createArray();
+        for(TheApp app: theApp){
+            if(app.getPackageName().equals(pkgName)){
+                app.setLocked(false);
+            }
+        }
+    }
+
+    public void saveList(List<TheApp> list)
+    {
+
+        int q=1;
+        for(TheApp app: list)
+        {
+            editor.putBoolean(app.getPackageName(),app.isLocked());
+            if (app.isLocked())
+            {
+                editor.putString(""+q,app.getPackageName());
+                        q++;
+            }
+        }
+        editor.putInt("total locked",q-1);
+        editor.putBoolean("master lock state", true);
+
+        editor.commit();
+        //Log.d("Saving..........","Saved");
+    }
+
+    @ReactMethod
+    public void RunBackground(){
+        //Log.d("Background",null);
+        
+        saveList(theApp);
+
+        this.reactContext.stopService(new Intent(this.reactContext.getApplicationContext(),CurrentActivityService.class));
+        this.reactContext.startService(new Intent(this.reactContext.getApplicationContext(),CurrentActivityService.class));
+    }
     @Override
     public Map<String, Object> getConstants() {
         final Map<String, Object> constants = new HashMap<>();
@@ -61,26 +182,53 @@ public class ToastModule extends ReactContextBaseJavaModule {
         return constants;
     }
 
+    /*@RequiresApi(api = Build.VERSION_CODES.M)
+    public void checkDrawOverlayPermission() {
+
+        // Checks if app already has permission to draw overlays
+        if (!Settings.canDrawOverlays(this.reactContext)) {
+
+            // If not, form up an Intent to launch the permission request
+            Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + this.reactContext.getPackageName()));
+
+            // Launch Intent, with the supplied request code
+            this.reactContext.startActivity(intent, 5675);
+        }
+    }*/
     @ReactMethod
     public void muerte(Promise promise) {
-        // android.os.Process.killProcess("com.alibaba.aliexpresshd");
         int puid;
-        String packageName = "com.alibaba.aliexpresshd";
+        String packageName = "com.spotify.music";
         try {
 
-            List<ActivityManager.RunningAppProcessInfo> pidsTask = am.getRunningAppProcesses();
-            for (int i = 0; i < pidsTask.size(); i++) {
-                if (pidsTask.get(i).processName.equals(packageName)) {
-                    puid = pidsTask.get(i).uid;
-                    promise.resolve(1);
-                }
+            List<ActivityManager.RunningAppProcessInfo> activityes = am.getRunningAppProcesses();
+            WritableArray list = Arguments.createArray();
+            for (int iCnt = 0; iCnt < activityes.size(); iCnt++) {
+                WritableMap appInfo = Arguments.createMap();
+                // Log.d("APP: ", iCnt +" "+ activityes.get(iCnt).processName);
+                appInfo.putString("name", activityes.get(iCnt).processName);
+                appInfo.putInt("pid", activityes.get(iCnt).pid);
+                /*
+                 * if (activityes.get(iCnt).processName.contains(packageName)){
+                 * android.os.Process.sendSignal(activityes.get(iCnt).pid,
+                 * android.os.Process.SIGNAL_KILL);
+                 * android.os.Process.killProcess(activityes.get(iCnt).pid);
+                 * //manager.killBackgroundProcesses("com.android.email");
+                 * 
+                 * //manager.restartPackage("com.android.email");
+                 * promise.resolve(1);
+                 * //System.out.println("Inside if");
+                 * }
+                 */
+                list.pushMap(appInfo);
+
             }
-            promise.resolve(2);
+            promise.resolve(list);
 
         } catch (Error e) {
             promise.reject(e);
         }
-        // android.os.Process.killProcess(piud);
+        // killBackgroundProcesses (String packageName)
     }
 
     @ReactMethod
@@ -247,6 +395,17 @@ public class ToastModule extends ReactContextBaseJavaModule {
     public void isPackageInstalled(String packageName, Promise cb) {
         try {
             pm.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES);
+            cb.resolve(true);
+        } catch (Exception e) {
+            cb.resolve(false);
+        }
+
+    }
+
+    @ReactMethod
+    public void killbypackage(String packageName, Promise cb) {
+        try {
+            am.killBackgroundProcesses(packageName);
             cb.resolve(true);
         } catch (Exception e) {
             cb.resolve(false);

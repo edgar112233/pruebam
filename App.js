@@ -2,11 +2,13 @@ import { Text, View , NativeModules } from "react-native";
 import { Button } from "react-native";
 import ToastModule from './ToastModule';
 import { APP_LIST } from './app-list';
+ 
 
 
 
 export default function App() {
-
+  
+  
 
   const handleClick = async () => {
     try{
@@ -81,12 +83,17 @@ export default function App() {
     console.log("alirun is")
     try{
       console.log("entro al alirun")
-      var run = await ToastModule.muerte()
+      var run = await ToastModule.killbypackage("com.spotify.music")
       console.log(run)
     }catch(e){
       console.log("hizo catch")
       console.log(e)
   }
+  }
+
+  const showBlockApps = async () => {
+    var list = await ToastModule.showBlockApplications()
+    console.log(list)
   }
 
   return (
@@ -96,6 +103,7 @@ export default function App() {
         <Button  title="kill" onPress={handleClick1}/>
         <Button  title="getApps" onPress={getAplications}/>
         <Button  title="aliisrun" onPress={alirun}/>
+        <Button  title="ShowAppsBlocked" onPress={showBlockApps}/>
       </View>
     
   );

@@ -1,18 +1,25 @@
 import ToastModule from './ToastModule';
 import { APP_LIST } from './app-list';
 import React, {useState} from 'react';
-import { SafeAreaView, View, FlatList, StyleSheet, Text, StatusBar, Pressable, NativeModules, Image } from 'react-native';
+import { SafeAreaView, View, FlatList, StyleSheet, Text, StatusBar, Pressable, NativeModules, Image, AppState } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'; //Download
+import { createIconSetFromFontello } from 'react-native-vector-icons';
 
 const Item = ({ title, icon, pkgName  }) => {
     const [islock, setLock] = useState(false);
 
-    const onClickItem  = () => {
+    const onClickItem  = async () => {
         //setLock(!islock);
         if(!islock){
             //Desactivar aplicación.
             console.log(title)
             console.log(pkgName)
+            const p = await ToastModule.BlockApplication(pkgName)
+            console.log(p)
+
+        }
+        else{
+            ToastModule.DesBlockApplication(pkgName)
         }
         setLock(!islock);
         //console.log(islock)
@@ -54,9 +61,10 @@ class App2 extends React.Component {
         this.state = {
             error: null,
             isLoaded: false,
-            data: []
-        };
-    }
+            data: [],
+            appState: AppState.currentState
+          }
+    };
    
     componentDidMount() {        
         ToastModule.getApps().then(
@@ -73,6 +81,23 @@ class App2 extends React.Component {
             });
           }
         )
+        AppState.addEventListener('change', this._handleAppStateChange);
+    }
+
+    componentWillUnmount() {
+      AppState.removeEventListener('change', this._handleAppStateChange);
+      console.log('componentWillMount')
+    }
+
+    _handleAppStateChange = (nextAppState) => {
+      if (this.state.appState.match(/inactive|background/) && nextAppState === 'active') {
+        console.log('App has come to the foreground!')
+      }
+      else{
+          console.log('Background')
+          ToastModule.RunBackground()
+      }
+      this.setState({appState: nextAppState});
     }
    
     render() {
