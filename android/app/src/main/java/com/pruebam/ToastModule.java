@@ -17,10 +17,7 @@ import com.facebook.react.bridge.Arguments;
 
 import android.graphics.drawable.Drawable;
 
-import java.io.File;
-
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -34,18 +31,100 @@ import android.content.pm.PackageInfo;
 import com.pruebam.Utility;
 import android.app.ActivityManager;
 
+<<<<<<< Updated upstream
 public class ToastModule extends ReactContextBaseJavaModule {
 
+=======
+import android.content.SharedPreferences;
+import android.app.usage.UsageStats;
+import android.app.usage.UsageStatsManager;
+import android.app.Service;
+import android.provider.Settings;
+import android.util.Log;
+import android.net.Uri;
+
+import android.os.Handler;
+import java.lang.Thread;
+import android.os.Message;
+import android.os.Looper;
+
+public class ToastModule extends ReactContextBaseJavaModule {
+
+    SharedPreferences sharedpreferences;
+    SharedPreferences.Editor editor;
+    boolean mLock = false;
+    List<String> lockedApp = new ArrayList<String>();
+    Map<String, UsageStats> map;
+    UsageStatsManager mUsageStatsManager;
+
+>>>>>>> Stashed changes
     private static final String DURATION_SHORT_KEY = "SHORT";
     private static final String DURATION_LONG_KEY = "LONG";
     private static final String E_LAYOUT_ERROR = "E_LAYOUT_ERROR";
     PackageManager pm;
     ActivityManager am;
+<<<<<<< Updated upstream
+=======
+    ReactApplicationContext reactContext;
+
+    static List<TheApp> theApp = new ArrayList<>();
+>>>>>>> Stashed changes
 
     public ToastModule(ReactApplicationContext reactContext) {
         super(reactContext);
         pm = reactContext.getPackageManager();
         am = (ActivityManager) reactContext.getSystemService(reactContext.ACTIVITY_SERVICE);
+<<<<<<< Updated upstream
+=======
+
+        sharedpreferences = (SharedPreferences) reactContext.getSharedPreferences("Locked apps list",
+                reactContext.MODE_PRIVATE);
+        editor = sharedpreferences.edit();
+
+        // reactContext.stopService(new Intent(reactContext.getApplicationContext(),
+        // CurrentActivityService.class));//stop any earlier services
+        mUsageStatsManager = (UsageStatsManager) reactContext.getSystemService(Service.USAGE_STATS_SERVICE);
+
+        Thread thread = new Thread() {
+            public void run() {
+                Looper.prepare();// Call looper.prepare()
+
+                Handler mHandler = new Handler() {
+                    public void handleMessage(Message msg) {
+                        Toast.makeText(reactContext, "Finco is Daddy", Toast.LENGTH_LONG);
+                    }
+                };
+
+                Looper.loop();
+            }
+        };
+        thread.start();
+
+        // Toast.makeText(this.reactContext,"TOAST!!!!",Toast.LENGTH_LONG);
+        mLock = sharedpreferences.getBoolean("master lock state", true);
+
+        List<PackageInfo> pList = pm.getInstalledPackages(0);
+        TheApp aApp = new TheApp();
+
+        for (int i = 0; i < pList.size(); i++) {
+            PackageInfo packageInfo = pList.get(i);
+            if ((packageInfo.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0) {
+                aApp = new TheApp();
+                aApp.setPackageName(packageInfo.packageName);
+                aApp.setName(((String) packageInfo.applicationInfo.loadLabel(pm)).trim());
+                theApp.add(aApp);
+            }
+        }
+
+        requestUsageStatsPermission();
+
+    }
+
+    public void showToast(final String toast) {
+        // getActivity().runOnUiThread(() -> Toast.makeText(this.reactContext, toast,
+        // Toast.LENGTH_SHORT).show());
+        Toast.makeText(this.reactContext, toast, Toast.LENGTH_SHORT).show();
+>>>>>>> Stashed changes
     }
 
     @Override
@@ -53,6 +132,104 @@ public class ToastModule extends ReactContextBaseJavaModule {
         return "ToastModule";
     }
 
+<<<<<<< Updated upstream
+=======
+    void requestUsageStatsPermission() {
+        // Intent sharingIntent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
+        Intent i = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        i.addCategory(Intent.CATEGORY_DEFAULT);
+        i.setData(Uri.parse("package:" + this.reactContext.getPackageName()));
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        reactContext.startActivity(i);
+    }
+
+    @ReactMethod
+    public void BlockApplication(String pkgName, Promise promise) {
+        Log.e("Block app", "");
+        int n = 0;
+        for (TheApp app : theApp) {
+            if (app.getPackageName().equals(pkgName)) {
+                app.setLocked(true);
+                n = 1;
+            }
+        }
+        if (n == 1) {
+            promise.resolve(1);
+        } else {
+            promise.resolve(0);
+        }
+    }
+
+    @ReactMethod
+    public void showBlockApplications(Promise promise) {
+        WritableArray list = Arguments.createArray();
+        for (TheApp app : theApp) {
+            if (app.isLocked() == true) {
+                WritableMap appInfo = Arguments.createMap();
+                appInfo.putString("AppName", app.getName());
+                list.pushMap(appInfo);
+
+            }
+        }
+        promise.resolve(list);
+    }
+
+    @ReactMethod
+    public void DesBlockApplication(String pkgName) {
+        WritableArray list = Arguments.createArray();
+        for (TheApp app : theApp) {
+            if (app.getPackageName().equals(pkgName)) {
+                app.setLocked(false);
+            }
+        }
+    }
+
+    public int saveList(List<TheApp> list) {
+
+        int q = 1;
+        for (TheApp app : list) {
+            editor.putBoolean(app.getPackageName(), app.isLocked());
+            if (app.isLocked()) {
+                editor.putString("" + q, app.getPackageName());
+                q++;
+            }
+        }
+        editor.putInt("total locked", q - 1);
+        editor.putBoolean("master lock state", true);
+
+        editor.commit();
+        // Log.d("Saving..........","Saved");
+        return 1;
+    }
+
+    @ReactMethod
+    public void runService() {
+        this.reactContext.startService(new Intent(this.reactContext, MyService.class));
+    }
+
+    @ReactMethod
+    public void stopService() {
+        this.reactContext.stopService(new Intent(this.reactContext, MyService.class));
+    }
+
+    @ReactMethod
+    public void RunBackground(Promise promise) {
+        // Log.d("Background",null);
+
+        int a = saveList(theApp);
+        promise.resolve(a);
+
+        // Intent i=new Intent(this.reactContext,FullscreenActivity.class);
+        // i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK |Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        // this.reactContext.startActivity(i);
+
+        this.reactContext
+                .stopService(new Intent(this.reactContext.getApplicationContext(), CurrentActivityService.class));
+        this.reactContext
+                .startService(new Intent(this.reactContext.getApplicationContext(), CurrentActivityService.class));
+    }
+
+>>>>>>> Stashed changes
     @Override
     public Map<String, Object> getConstants() {
         final Map<String, Object> constants = new HashMap<>();
@@ -61,6 +238,25 @@ public class ToastModule extends ReactContextBaseJavaModule {
         return constants;
     }
 
+<<<<<<< Updated upstream
+=======
+    /*
+     * @RequiresApi(api = Build.VERSION_CODES.M)
+     * public void checkDrawOverlayPermission() {
+     * 
+     * // Checks if app already has permission to draw overlays
+     * if (!Settings.canDrawOverlays(this.reactContext)) {
+     * 
+     * // If not, form up an Intent to launch the permission request
+     * Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+     * Uri.parse("package:" + this.reactContext.getPackageName()));
+     * 
+     * // Launch Intent, with the supplied request code
+     * this.reactContext.startActivity(intent, 5675);
+     * }
+     * }
+     */
+>>>>>>> Stashed changes
     @ReactMethod
     public void muerte(Promise promise) {
         int puid;
