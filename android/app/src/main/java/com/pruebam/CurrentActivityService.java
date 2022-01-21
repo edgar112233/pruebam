@@ -173,13 +173,13 @@ public class CurrentActivityService extends Service {
     void visualLock()
     {
 
-        final Intent i=new Intent(this,FullscreenActivity.class);
+        /*final Intent i=new Intent(this,FullscreenActivity.class);
 
         i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             launchMainService();
-        }startActivity(i);
+        }startActivity(i);*/
 
     }
 

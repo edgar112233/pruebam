@@ -43,6 +43,12 @@ import android.provider.Settings;
 import android.util.Log;
 import android.os.Build;
 import android.net.Uri;
+import java.lang.Runnable;
+
+import android.os.Handler;
+import java.lang.Thread;
+import android.os.Message;
+import android.os.Looper;
 
 public class ToastModule extends ReactContextBaseJavaModule {
 
@@ -73,7 +79,25 @@ public class ToastModule extends ReactContextBaseJavaModule {
 
         //reactContext.stopService(new Intent(reactContext.getApplicationContext(), CurrentActivityService.class));//stop any earlier services
         mUsageStatsManager = (UsageStatsManager) reactContext.getSystemService(Service.USAGE_STATS_SERVICE);
+        
+        //showToast("HOLA");
 
+        Thread thread = new Thread(){
+            public void run(){
+                Looper.prepare();//Call looper.prepare()
+           
+                Handler mHandler = new Handler() {
+                    public void handleMessage(Message msg) {
+                        Toast.makeText(reactContext, "Finco is Daddy", Toast.LENGTH_LONG);
+                    }
+                };
+           
+                Looper.loop();
+            }
+        };
+        thread.start();
+
+        //Toast.makeText(this.reactContext,"TOAST!!!!",Toast.LENGTH_LONG);
         mLock=sharedpreferences.getBoolean("master lock state",true);
         
         List<PackageInfo> pList = pm.getInstalledPackages(0);
@@ -93,15 +117,23 @@ public class ToastModule extends ReactContextBaseJavaModule {
 
     }
 
+    public void showToast(final String toast){
+        //getActivity().runOnUiThread(() -> Toast.makeText(this.reactContext, toast, Toast.LENGTH_SHORT).show());
+        Toast.makeText(this.reactContext, toast, Toast.LENGTH_SHORT).show();
+    }
+
     @Override
     public String getName() {
         return "ToastModule";
     }
 
     void requestUsageStatsPermission(){
-        Intent sharingIntent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
-        sharingIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK |Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        reactContext.startActivity(sharingIntent);
+        //Intent sharingIntent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
+        Intent i = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        i.addCategory(Intent.CATEGORY_DEFAULT);
+        i.setData(Uri.parse("package:" + this.reactContext.getPackageName()));
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK |Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        reactContext.startActivity(i);
     }
     @ReactMethod 
     public void BlockApplication(String pkgName, Promise promise){
@@ -145,7 +177,7 @@ public class ToastModule extends ReactContextBaseJavaModule {
         }
     }
 
-    public void saveList(List<TheApp> list)
+    public int saveList(List<TheApp> list)
     {
 
         int q=1;
@@ -163,13 +195,30 @@ public class ToastModule extends ReactContextBaseJavaModule {
 
         editor.commit();
         //Log.d("Saving..........","Saved");
+        return 1;
     }
 
     @ReactMethod
-    public void RunBackground(){
+    public void runService(){
+        this.reactContext.startService(new Intent(this.reactContext, MyService.class));  
+    }
+
+    @ReactMethod
+    public void stopService(){
+        this.reactContext.stopService(new Intent(this.reactContext, MyService.class));  
+    }
+
+    @ReactMethod
+    public void RunBackground(Promise promise){
         //Log.d("Background",null);
         
-        saveList(theApp);
+        int a = saveList(theApp);
+        promise.resolve(a);
+
+        //Intent i=new Intent(this.reactContext,FullscreenActivity.class);
+        //i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK |Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        //this.reactContext.startActivity(i);
+
 
         this.reactContext.stopService(new Intent(this.reactContext.getApplicationContext(),CurrentActivityService.class));
         this.reactContext.startService(new Intent(this.reactContext.getApplicationContext(),CurrentActivityService.class));

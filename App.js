@@ -96,6 +96,14 @@ export default function App() {
     console.log(list)
   }
 
+  const StartService = async () => {
+    ToastModule.runService()
+  }
+
+  const StopService = async () => {
+    ToastModule.stopService()
+  }
+
   return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <Text>Home!</Text>
@@ -104,6 +112,8 @@ export default function App() {
         <Button  title="getApps" onPress={getAplications}/>
         <Button  title="aliisrun" onPress={alirun}/>
         <Button  title="ShowAppsBlocked" onPress={showBlockApps}/>
+        <Button  title="StartService" onPress={StartService}/>
+        <Button  title="StopService" onPress={StopService}/>
       </View>
     
   );

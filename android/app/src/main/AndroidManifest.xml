@@ -30,5 +30,16 @@
       </intent-filter>
     </activity>
     <activity android:name="com.facebook.react.devsupport.DevSettingsActivity"/>
+    <service
+            android:name="com.pruebam.CurrentActivityService"
+            android:enabled="true" />
+
+
+    <service
+            android:name="com.pruebam.OverlayService"
+            android:enabled="true"></service>
+     <service android:name="com.pruebam.MyService"
+              android:enabled="true" />
   </application>
+
 </manifest>

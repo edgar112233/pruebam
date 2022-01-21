@@ -89,13 +89,14 @@ class App2 extends React.Component {
       console.log('componentWillMount')
     }
 
-    _handleAppStateChange = (nextAppState) => {
+    _handleAppStateChange = async (nextAppState) => {
       if (this.state.appState.match(/inactive|background/) && nextAppState === 'active') {
         console.log('App has come to the foreground!')
       }
       else{
           console.log('Background')
-          ToastModule.RunBackground()
+          const p = await ToastModule.RunBackground()
+          console.log(p)
       }
       this.setState({appState: nextAppState});
     }
