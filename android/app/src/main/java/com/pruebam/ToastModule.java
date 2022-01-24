@@ -127,9 +127,10 @@ public class ToastModule extends ReactContextBaseJavaModule {
         return "ToastModule";
     }
 
-    void requestUsageStatsPermission(){
-        //Intent sharingIntent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
-        Intent i = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+    public void requestUsageStatsPermission(){
+        Intent i = new Intent(android.provider.Settings.ACTION_USAGE_ACCESS_SETTINGS);
+        //startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
+        //Intent i = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
         i.addCategory(Intent.CATEGORY_DEFAULT);
         i.setData(Uri.parse("package:" + this.reactContext.getPackageName()));
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK |Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -195,7 +196,7 @@ public class ToastModule extends ReactContextBaseJavaModule {
 
         editor.commit();
         //Log.d("Saving..........","Saved");
-        return 1;
+        return q;
     }
 
     @ReactMethod
@@ -220,8 +221,8 @@ public class ToastModule extends ReactContextBaseJavaModule {
         //this.reactContext.startActivity(i);
 
 
-        this.reactContext.stopService(new Intent(this.reactContext.getApplicationContext(),CurrentActivityService.class));
-        this.reactContext.startService(new Intent(this.reactContext.getApplicationContext(),CurrentActivityService.class));
+        this.reactContext.stopService(new Intent(this.reactContext,CurrentActivityService.class));
+        this.reactContext.startService(new Intent(this.reactContext,CurrentActivityService.class));
     }
     @Override
     public Map<String, Object> getConstants() {

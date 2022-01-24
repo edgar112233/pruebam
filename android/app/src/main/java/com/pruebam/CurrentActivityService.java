@@ -13,6 +13,7 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+//import com.rvalerio.fgchecker.AppChecker;
 
 /**
  * Created by ANSHUL on 09-10-2017.
@@ -56,6 +57,7 @@ public class CurrentActivityService extends Service {
         //lAppsCal=new ArrayList<>();
         //Calendar tempCal=Calendar.getInstance();
         //tempCal.add(Calendar.SECOND,DELAY);
+        Toast.makeText(getApplicationContext(),"OnCreate!!", Toast.LENGTH_SHORT).show();
         for (int i=1;i<=sharedpreferences.getInt("total locked",0);i++)
         {
             lApps.add(sharedpreferences.getString(""+i,null));
@@ -63,6 +65,7 @@ public class CurrentActivityService extends Service {
 
             //lAppsCal.add(tempCal);
         }
+        //Toast.makeText(getApplicationContext(),lApps.toString(), Toast.LENGTH_SHORT).show();
         //PHONE=sharedpreferences.getString("phone",null);
         //LAUNCHER=sharedpreferences.getString("launcher",null);
         //adminCal=Calendar.getInstance();
@@ -74,11 +77,12 @@ public class CurrentActivityService extends Service {
 
     @Override
     public int onStartCommand(Intent intent,  int flags, int startId) {
+        Toast.makeText(getApplicationContext(),"OnStartCommand!!", Toast.LENGTH_SHORT).show();
 
         //Log.d("Service..","Started");
         //Log.d("Service",InstAppList.theApp.get(0).getPackageName());
         appChecker = new AppChecker();
-        adminAppChecker=new AppChecker(5);
+        //adminAppChecker=new AppChecker(5);
 
         /*adminAppChecker
                 .when("com.android.settings.DeviceAdminAdd", new AppChecker.Listener() {
@@ -94,7 +98,16 @@ public class CurrentActivityService extends Service {
                 ).timeout(200).start(this);*/
 
 
+        Toast.makeText(getApplicationContext(),lApps.toString(), Toast.LENGTH_SHORT).show();
 
+        /*appChecker.whenAny(new AppChecker.Listener() {
+            @Override
+            public void onForeground(String packageName) {
+                // do something
+                Toast.makeText(getApplicationContext(), "APP FOREGROUND: "+ packageName , Toast.LENGTH_SHORT).show();
+            }
+        }
+        ).timeout(1000).start(this);*/
         appChecker
                 .whenList(lApps, new AppChecker.Listener() {
                     @Override
@@ -102,8 +115,7 @@ public class CurrentActivityService extends Service {
                        //if (Calendar.getInstance().after(lAppsCal.get(lApps.indexOf(process))) ) {
 
                         //if (toBLocked())
-                        Toast.makeText(getApplicationContext(),
-                                "PASO POR ACAAAAAAAAAAA!!!!!!!!!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(),"CHECKS", Toast.LENGTH_SHORT).show();
                         visualLock();
 
                     }
@@ -172,7 +184,7 @@ public class CurrentActivityService extends Service {
     }
     void visualLock()
     {
-
+        Toast.makeText(getApplicationContext(),"LOCK APP", Toast.LENGTH_SHORT).show();
         /*final Intent i=new Intent(this,FullscreenActivity.class);
 
         i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
