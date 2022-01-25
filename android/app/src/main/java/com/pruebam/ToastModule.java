@@ -34,6 +34,7 @@ import android.content.pm.PackageInfo;
 
 import com.pruebam.Utility;
 import android.app.ActivityManager;
+import android.app.ActivityManager.RunningServiceInfo;
 
 import android.content.SharedPreferences;
 import android.app.usage.UsageStats;
@@ -50,6 +51,10 @@ import java.lang.Thread;
 import android.os.Message;
 import android.os.Looper;
 
+import android.content.Context;
+import android.app.AppOpsManager;
+import android.annotation.TargetApi;
+
 public class ToastModule extends ReactContextBaseJavaModule {
 
     SharedPreferences sharedpreferences;
@@ -65,6 +70,8 @@ public class ToastModule extends ReactContextBaseJavaModule {
     PackageManager pm;
     ActivityManager am;
     ReactApplicationContext reactContext;
+    CurrentActivityService  CurrentActivityService;
+    boolean habit = false;
 
     static List<TheApp> theApp=new ArrayList<>();  
 
@@ -73,6 +80,8 @@ public class ToastModule extends ReactContextBaseJavaModule {
         this.reactContext = reactContext;
         pm = reactContext.getPackageManager();
         am = (ActivityManager) reactContext.getSystemService(reactContext.ACTIVITY_SERVICE);
+
+        CurrentActivityService.setUpdateListener(this);
 
         sharedpreferences = (SharedPreferences) reactContext.getSharedPreferences("Locked apps list", reactContext.MODE_PRIVATE);
         editor = sharedpreferences.edit();
@@ -117,6 +126,7 @@ public class ToastModule extends ReactContextBaseJavaModule {
 
     }
 
+
     public void showToast(final String toast){
         //getActivity().runOnUiThread(() -> Toast.makeText(this.reactContext, toast, Toast.LENGTH_SHORT).show());
         Toast.makeText(this.reactContext, toast, Toast.LENGTH_SHORT).show();
@@ -127,14 +137,27 @@ public class ToastModule extends ReactContextBaseJavaModule {
         return "ToastModule";
     }
 
-    public void requestUsageStatsPermission(){
-        Intent i = new Intent(android.provider.Settings.ACTION_USAGE_ACCESS_SETTINGS);
-        //startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
-        //Intent i = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-        i.addCategory(Intent.CATEGORY_DEFAULT);
-        i.setData(Uri.parse("package:" + this.reactContext.getPackageName()));
-        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK |Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        reactContext.startActivity(i);
+    void requestUsageStatsPermission() {
+        if(android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP 
+            && !hasUsageStatsPermission(this.reactContext)) {
+            Intent intent = new Intent(android.provider.Settings.ACTION_USAGE_ACCESS_SETTINGS);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK |Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            this.reactContext.startActivity(intent);
+        }
+    }
+    
+    @TargetApi(Build.VERSION_CODES.KITKAT)
+    boolean hasUsageStatsPermission(Context context) {
+        AppOpsManager appOps = (AppOpsManager) context.getSystemService(context.APP_OPS_SERVICE);
+        int mode = appOps.checkOpNoThrow("android:get_usage_stats",
+                android.os.Process.myUid(), context.getPackageName());
+        boolean granted = mode == AppOpsManager.MODE_ALLOWED;
+        return granted;
+    }
+
+    @ReactMethod 
+    public void BlockApp(Promise promise){
+        promise.resolve(1);
     }
     @ReactMethod 
     public void BlockApplication(String pkgName, Promise promise){
@@ -219,10 +242,18 @@ public class ToastModule extends ReactContextBaseJavaModule {
         //Intent i=new Intent(this.reactContext,FullscreenActivity.class);
         //i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK |Intent.FLAG_ACTIVITY_CLEAR_TASK);
         //this.reactContext.startActivity(i);
-
-
         this.reactContext.stopService(new Intent(this.reactContext,CurrentActivityService.class));
         this.reactContext.startService(new Intent(this.reactContext,CurrentActivityService.class));
+    }
+
+    public boolean foregroundServiceRunning(){
+        ActivityManager activityManager = (ActivityManager) this.reactContext.getSystemService(this.reactContext.ACTIVITY_SERVICE);
+        for(ActivityManager.RunningServiceInfo service: activityManager.getRunningServices(Integer.MAX_VALUE)) {
+            if(CurrentActivityService.class.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
     }
     @Override
     public Map<String, Object> getConstants() {
@@ -461,6 +492,22 @@ public class ToastModule extends ReactContextBaseJavaModule {
             cb.resolve(false);
         }
 
+    }
+
+    @ReactMethod
+    public void habit(){
+        habit = true;
+    }
+    
+
+    @ReactMethod
+    public void testing(Promise promise){
+       if(habit){
+        promise.resolve(1);
+
+       }else{
+        promise.resolve(0);
+       }
     }
 
 }

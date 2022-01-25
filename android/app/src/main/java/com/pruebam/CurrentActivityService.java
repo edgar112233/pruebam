@@ -13,6 +13,24 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import android.app.AlertDialog.Builder;
+import android.content.DialogInterface;
+import android.app.AlertDialog;
+import android.view.WindowManager;
+import android.app.KeyguardManager;
+import android.os.PowerManager;
+import android.os.PowerManager.WakeLock;
+import android.app.NotificationManager;
+
+//import android.app.Notification.Builder;
+
+import android.app.NotificationChannel;
+
+import android.app.Notification;
+import android.content.pm.PackageManager;
+
+
+
 //import com.rvalerio.fgchecker.AppChecker;
 
 /**
@@ -36,6 +54,7 @@ public class CurrentActivityService extends Service {
     long totalTime;
 
     List<TheApp> stats=new ArrayList<>();
+    private static ToastModule mModuleManager;
 
     @NonNull
     @Override
@@ -98,7 +117,7 @@ public class CurrentActivityService extends Service {
                 ).timeout(200).start(this);*/
 
 
-        Toast.makeText(getApplicationContext(),lApps.toString(), Toast.LENGTH_SHORT).show();
+        //Toast.makeText(getApplicationContext(),lApps.toString(), Toast.LENGTH_SHORT).show();
 
         /*appChecker.whenAny(new AppChecker.Listener() {
             @Override
@@ -115,14 +134,45 @@ public class CurrentActivityService extends Service {
                        //if (Calendar.getInstance().after(lAppsCal.get(lApps.indexOf(process))) ) {
 
                         //if (toBLocked())
-                        Toast.makeText(getApplicationContext(),"CHECKS", Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(getApplicationContext(),"CHECKS", Toast.LENGTH_SHORT).show();
                         visualLock();
 
                     }
                     }
                 )
-                .timeout(500)
+                .timeout(2000)
                 .start(this);
+
+                new Thread(
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            while (true) {
+                                Log.e("Service", "Service is running...");
+                                try {
+                                    Thread.sleep(2000);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                    }
+                ).start();
+            
+            final String CHANNELID = "Foreground Service ID";
+            NotificationChannel channel = new NotificationChannel(
+                    CHANNELID,
+                    CHANNELID,
+                    NotificationManager.IMPORTANCE_LOW
+            );
+    
+            getSystemService(NotificationManager.class).createNotificationChannel(channel);
+            Notification.Builder notification = new Notification.Builder(this, CHANNELID)
+                .setContentText("Service is running")
+                .setContentTitle("Service enabled");
+                //.setSmallIcon(R.drawable.ic_launcher_background);
+                
+            //startForeground(1001, notification.build());    
 
 
 
@@ -146,7 +196,13 @@ public class CurrentActivityService extends Service {
                 .timeout(60*1000)
                 ;*/
 
-        return START_STICKY;
+        //return START_STICKY;
+        return super.onStartCommand(intent, flags, startId);
+    }
+
+     // Let me get the module manager reference to pass information
+    public static void setUpdateListener(ToastModule moduleManager) {
+        mModuleManager = moduleManager;
     }
 
     @Override
@@ -159,7 +215,8 @@ public class CurrentActivityService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        appChecker.stop();
+        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
         Intent svc = new Intent(this, OverlayService.class);
 //        Log.d("starting overlay",null);
         stopService(svc);}
@@ -171,7 +228,7 @@ public class CurrentActivityService extends Service {
         //Log.d("Service..","Destroyed");
 
         if(sharedpreferences.getBoolean("edit",true))
-         startService(new Intent(this,CurrentActivityService.class));
+         startService(new Intent(this,CurrentActivityService.class));*/
     }
 
     private void launchMainService() {
@@ -185,10 +242,42 @@ public class CurrentActivityService extends Service {
     void visualLock()
     {
         Toast.makeText(getApplicationContext(),"LOCK APP", Toast.LENGTH_SHORT).show();
-        /*final Intent i=new Intent(this,FullscreenActivity.class);
+        //showAlertDialog();
+        /*AlertDialog alertDialog = new AlertDialog.Builder(this)
+                    .setTitle("Title")
+                    .setMessage("BLOCK APP")
+                    .setNegativeButton("Back",
+                    new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    }
+                    )
+                  .create();*/
+        String pkName = "com.pruebam";
+        PackageManager packageManager = this.getPackageManager();
+        Intent intent = packageManager.getLaunchIntentForPackage(pkName);
+        if (intent != null)
+        {
+            intent.setPackage(null);
+         // intent.setSourceBounds(new Rect(804,378, 1068, 657));
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+            mModuleManager.habit();
+            this.startActivity(intent);
+        }
 
-        i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        
+        //alertDialog.getWindow().setType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY);
+        //alertDialog.show();
 
+        //onDestroy();
+        /*Intent i= new Intent(this,FullscreenActivity.class);
+
+        i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+        this.startActivity(i);*/
+        /*i.setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT.toString());
+        startActivity(i);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             launchMainService();
         }startActivity(i);*/

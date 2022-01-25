@@ -1,7 +1,7 @@
 import ToastModule from './ToastModule';
 import { APP_LIST } from './app-list';
 import React, {useState} from 'react';
-import { SafeAreaView, View, FlatList, StyleSheet, Text, StatusBar, Pressable, NativeModules, Image, AppState } from 'react-native';
+import { SafeAreaView, View, FlatList, StyleSheet, Text, StatusBar, Pressable, NativeModules, Image, AppState, ToastAndroid } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'; //Download
 import { createIconSetFromFontello } from 'react-native-vector-icons';
 
@@ -62,7 +62,8 @@ class App2 extends React.Component {
             error: null,
             isLoaded: false,
             data: [],
-            appState: AppState.currentState
+            appState: AppState.currentState,
+            habit: false
           }
     };
    
@@ -82,6 +83,11 @@ class App2 extends React.Component {
           }
         )
         AppState.addEventListener('change', this._handleAppStateChange);
+      ToastModule.testing().then(
+        (result) =>  {
+            console.log("HABIT:" + result)
+        },
+      )
     }
 
     componentWillUnmount() {
@@ -92,6 +98,8 @@ class App2 extends React.Component {
     _handleAppStateChange = async (nextAppState) => {
       if (this.state.appState.match(/inactive|background/) && nextAppState === 'active') {
         console.log('App has come to the foreground!')
+        const h = await ToastModule.testing()
+        console.log("HABIT:" + h)
       }
       else{
           console.log('Background')
